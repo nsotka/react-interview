@@ -1,147 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
+import AddTaskBar from './components/AddTaskBar';
+import TaskItem from './components/TaskItem';
 
-const todos = [
-    {id: 1, name: 'Go to the supermarket', complete: false},
-    {id: 2, name: 'Call Alice', complete: false},
-    {id: 3, name: 'Ask Alice to call Bob', complete: false},
-    {id: 4, name: 'Do the dishes', complete: false},
-    {id: 5, name: 'Change car tyres', complete: false}
+
+
+const initTodos = [
+    { id: 1, name: 'Go to the supermarket', complete: false },
+    { id: 2, name: 'Call Alice', complete: false },
+    { id: 3, name: 'Ask Alice to call Bob', complete: false },
+    { id: 4, name: 'Do the dishes', complete: false },
+    { id: 5, name: 'Change car tyres', complete: false }
 ];
 
-class App extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            newTodoName: '',
-            todos: todos
-        };
+function App() {
+    const [todos, setTodos] = useState([...initTodos]);
+
+    const generateNewId = () => {
+        const todoIds = todos.map((task) => task.id);
+        const maxId = todoIds.length > 0 ? Math.max(...todoIds) : 0;
+        return maxId + 1;
     }
 
-    generateNewId() {
-        return this.state.todos.length + 1;
-    }
-
-    onSubmit(event) {
+    const onSubmit = (event, taskName) => {
         event.preventDefault();
 
-        var newTodos = this.state.todos.slice();
+        var newTodos = todos.slice();
         newTodos.push({
-            id: this.generateNewId(),
-            name: this.state.newTodoName,
+            id: generateNewId(),
+            name: taskName,
             complete: false
         });
 
-        this.setState({todos: newTodos, newTodoName: ''});
+        setTodos(newTodos);
     }
 
-    onClick(id) {
-        var todoItems = this.state.todos.slice();
-        for (let i = 0; i < this.state.todos.length; i++) {
-            if (todoItems[i].id === id) {
-                var newComplete = !todoItems[i].complete;
-                todoItems[i].complete = newComplete;
-            }
-        }
+    const changeTaskStatus = (id) => {
+        const todoItems = todos.map((item) => {
+            item.id === id && (item.complete = !item.complete);
+            return item;
+        })
 
-        this.setState({
-            todos: todoItems
-        });
+        setTodos(todoItems);
     }
 
-    onChange(event) {
-        this.setState({newTodoName: event.target.value});
-    }
-    onRemoveClick(id) {
-        //implement this logic
-        console.log('Remove Item!');
+    const onRemoveClick = (id) => {
+        const filteredTasks = todos.filter((task) => task.id !== id)
+
+        setTodos(filteredTasks);
     }
 
-    render() {
-        return (
-            <div className="">
-                {this.todoItems()}
-                <Bar
-                    onSubmit={this.onSubmit.bind(this)}
-                    newTodoName={this.state.newTodoName}
-                    onInputChange={this.onChange.bind(this)}
-                />
-            </div>
-        );
-    }
+    const todoItems = () => {
+        var retVal = todos.map((todo) => (
+            <TaskItem
+                key={todo.id}
+                todoItem={todo}
+                onRemoveClick={onRemoveClick}
+                onStatusClick={changeTaskStatus}
+            />
+        ))
 
-    todoItems = () => {
-        var retVal = [];
-
-        for (let i = 0; i < this.state.todos.length; i++) {
-            var todo = this.state.todos[i];
-            retVal.push(
-                <Hello
-                    key={todo.id}
-                    todo={todo}
-                    onClick={this.onClick.bind(this)}
-                    onRemoveClick={this.onRemoveClick.bind(this)}
-                />
-            );
-        }
         return retVal;
     };
-}
 
-class Hello extends React.Component {
-    render() {
-        var color;
-        var text;
-
-        if (this.props.todo.complete === true) {
-            color = 'lightgreen';
-            text = 'Complete';
-        } else {
-            color = 'pink';
-            text = 'Incomplete';
-        }
-
-        return (
-            <div className="wrapper" style={{backgroundColor: color}}>
-                <h3>{this.props.todo.name}</h3>
-                <button
-                    className="btn"
-                    onClick={() => this.props.onClick(this.props.todo.id)}>
-                    {text}
-                </button>
-                <button
-                    className="btn"
-                    onClick={() =>
-                        this.props.onRemoveClick(this.props.todo.id)
-                    }>
-                    Remove from list
-                </button>
-            </div>
-        );
-    }
-}
-
-class Bar extends React.Component {
-    render() {
-        return (
-            <form
-                className="wrapper"
-                style={{'grid-template-columns': '7fr 2fr'}}
-                onSubmit={this.props.onSubmit}>
-                <input
-                    placeholder="Add new todo"
-                    value={this.props.newTodoName}
-                    onChange={this.props.onInputChange}
-                />
-                <button
-                    className="btn btn-success"
-                    type="submit"
-                    value="Submit">
-                    Submit
-                </button>
-            </form>
-        );
-    }
+    return (
+        <div>
+            {todoItems()}
+            <AddTaskBar
+                onSubmit={onSubmit}
+            />
+        </div>
+    );
 }
 
 export default App;
